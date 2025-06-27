@@ -1,9 +1,8 @@
 'use server';
 
 import { neon } from '@neondatabase/serverless';
-import { redirect } from 'next/navigation';
 
-export async function loginAction(prevState: any, formData: FormData) {
+export async function loginAction(prevState: unknown, formData: FormData) {
   const sql = neon(`${process.env.DATABASE_URL}`);
 
   const email = formData.get('email')?.toString().trim();
@@ -20,6 +19,4 @@ export async function loginAction(prevState: any, formData: FormData) {
   if (result.length === 0) {
     return { error: 'Invalid email or password' };
   }
-
-  redirect('/dashboard');
 }
