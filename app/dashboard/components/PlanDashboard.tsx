@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { Pool } from '@neondatabase/serverless';
-import { useRouter } from 'next/navigation';
 
 interface Plan {
   id: number;
@@ -27,7 +26,7 @@ const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
 });
 
-async function query(sql: string, params?: any[]) {
+async function query(sql: string, params?: (string | number | boolean | Date)[]) {
   const client = await pool.connect();
   try {
     return await client.query(sql, params);
@@ -47,7 +46,6 @@ export default function PlanDashboard() {
   const [paymentAmount, setPaymentAmount] = useState('');
   const [paymentDate, setPaymentDate] = useState(new Date().toISOString().split('T')[0]);
   
-  // New plan form state
   const [newPlan, setNewPlan] = useState({
     plan_name: '',
     start_date: new Date().toISOString().split('T')[0],
@@ -56,7 +54,8 @@ export default function PlanDashboard() {
     total_amount: ''
   });
 
-  const router = useRouter();
+  // Remove unused router since we're using modals
+  // const router = useRouter();
 
   const fetchPlans = useCallback(async () => {
     setLoading(true);
@@ -117,14 +116,12 @@ export default function PlanDashboard() {
     try {
       await query('BEGIN');
       
-      // Update plan with payment
       const newAmountPaid = selectedPlan.amount_paid + amount;
       await query(
         'UPDATE plans SET amount_paid = $1, last_payment_date = $2 WHERE id = $3',
         [newAmountPaid, paymentDate, selectedPlan.id]
       );
 
-      // Record payment in history
       await query(
         'INSERT INTO payment_history (plan_id, amount, payment_date) VALUES ($1, $2, $3)',
         [selectedPlan.id, amount, paymentDate]
@@ -235,6 +232,7 @@ export default function PlanDashboard() {
       currency: 'USD'
     }).format(amount);
   };
+
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
